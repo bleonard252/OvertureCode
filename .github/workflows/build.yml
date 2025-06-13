@@ -1,0 +1,43 @@
+# GitHub Actions workflow to build using the Makefile
+name: Build Fonts
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install FontForge
+        run: sudo apt-get update && sudo apt-get install -y fontforge
+
+      - name: Install LuaJIT
+        run: sudo apt-get install -y luajit
+
+      - name: Build without characters
+        run: make without-characters
+
+      - name: Build with characters
+        run: make with-characters
+
+      - name: Pack fonts
+        run: make pack
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: LigaturizedFonts
+          path: |
+            LigaturizedFonts.zip
+            LigaturizedFontsWithCharacters.zip
