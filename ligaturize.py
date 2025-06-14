@@ -86,7 +86,7 @@ class LigatureCreator(object):
             glyph.width = self.emwidth
             # Correct bearings to center the glyph.
             glyph.left_side_bearing = int((glyph.left_side_bearing + glyph.right_side_bearing) / 2)
-            glyph.right_side_bearing = glyph.left_side_bearing
+            glyph.right_side_bearing = int(glyph.left_side_bearing)
 
         # Final adjustment of horizontal advance to correct for rounding
         # errors when scaling/centering -- otherwise small errors can result
