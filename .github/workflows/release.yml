@@ -37,6 +37,11 @@ jobs:
           skip_unpack: true
           allow_forks: false
           name: OvertureCodeWithCharacterPatch.zip
+    
+      - name: Fix filenames
+        run: |
+          mv OvertureCode.zip.zip OvertureCode.zip
+          mv OvertureCodeWithCharacterPatch.zip.zip OvertureCodeWithCharacterPatch.zip
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
