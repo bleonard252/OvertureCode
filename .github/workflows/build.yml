@@ -6,10 +6,18 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'Publish release with latest build artifacts?'
+        required: false
+        default: 'false'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      build_id: ${{ steps.upload-1.outputs.artifact-id }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,17 +41,48 @@ jobs:
       - name: Build with characters
         run: make with-characters
 
-      - name: Pack fonts
-        run: make pack
-
-      - name: Upload artifacts (without symbol patch)
+      - name: Upload font artifacts without symbol patch
+        id: upload-1
         uses: actions/upload-artifact@v4
         with:
-          name: LigaturizedFonts.zip
-          path: LigaturizedFonts.zip
+          name: OvertureCode.zip
+          path: fonts/output
 
       - name: Upload artifacts (with symbol patch)
         uses: actions/upload-artifact@v4
         with:
-          name: LigaturizedFontsWithCharacters.zip
-          path: LigaturizedFontsWithCharacters.zip
+          name: OvertureCodeWithCharacterPatch.zip
+          path: fonts/output-with-characters
+
+  release:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release == 'true' }}
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download OvertureCode.zip
+        uses: actions/download-artifact@v4
+        with:
+          name: OvertureCode.zip
+          path: fonts/output
+
+      - name: Download OvertureCodeWithCharacterPatch.zip
+        uses: actions/download-artifact@v4
+        with:
+          name: OvertureCodeWithCharacterPatch.zip
+          path: fonts/output-with-characters
+      
+      - name: Repack fonts
+        run: make pack
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: |
+            Automated release of ligaturized fonts.
+          files: |
+            OvertureCode.zip
+            OvertureCodeWithCharacterPatch.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
